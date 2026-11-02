@@ -1,0 +1,175 @@
+
+-- [[ Sell Lemons Hub - Noolkid Edition ]] --
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Eğer daha önce açık kaldıysa eski menüyü yok et
+if CoreGui:FindFirstChild("NoolkidSellLemons") then
+    CoreGui.NoolkidSellLemons:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NoolkidSellLemons"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- Ana Çerçeve (Main Frame)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 380)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -190)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true -- Ekranınta istediğin yere taşı amk
+MainFrame.Parent = ScreenGui
+
+-- Köşeleri Yuvarlat
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = MainFrame
+
+-- Üst Başlık (Top Bar)
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 10)
+TopCorner.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -50, 1, 0)
+Title.Position = UDim2.new(0, 15, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "🍋 Noolkid | Sell Lemons"
+Title.TextColor3 = Color3.fromRGB(255, 220, 0)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+-- Kapatma / Küçültme Tuşu (-)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Text = "-"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 18
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseBtn
+
+-- İçerik Konteyneri
+local Container = Instance.new("ScrollingFrame")
+Container.Size = UDim2.new(1, -20, 1, -55)
+Container.Position = UDim2.new(0, 10, 0, 45)
+Container.BackgroundTransparency = 1
+Container.BorderSizePixel = 0
+Container.CanvasSize = UDim2.new(0, 0, 0, 300)
+Container.ScrollBarThickness = 4
+Container.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Parent = Container
+
+-- Şık Buton Oluşturma Fonksiyonu
+function CreateButton(name, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 45)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.Text = name
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Parent = Container
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(callback)
+end
+
+-- Toggle (Aç/Kapat) Buton Oluşturma Fonksiyonu
+function CreateToggle(name, callback)
+    local tglState = false
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 45)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.Text = name .. ": [KAPALI]"
+    btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamSemibold
+    btn.Parent = Container
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+
+    btn.MouseButton1Click:Connect(function()
+        tglState = not tglState
+        if tglState then
+            btn.Text = name .. ": [AÇIK]"
+            btn.TextColor3 = Color3.fromRGB(100, 255, 100)
+            btn.BackgroundColor3 = Color3.fromRGB(30, 70, 30)
+        else
+            btn.Text = name .. ": [KAPALI]"
+            btn.TextColor3 = Color3.fromRGB(255, 100, 100)
+            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        end
+        callback(tglState)
+    end)
+end
+
+-- // ÖZELLİKLER // --
+
+-- 1. Oto Farm / Satış Toggle
+_G.AutoLemon = false
+CreateToggle("Oto Limon Topla / Sat", function(state)
+    _G.AutoLemon = state
+    task.spawn(function()
+        while _G.AutoLemon do
+            task.wait(0.2)
+            pcall(function()
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if (v.Name:lower():find("lemon") or v.Name:lower():find("sell")) and v:IsA("BasePart") then
+                        firetouchinterest(LocalPlayer.Character.HumanoidRootPart, v, 0)
+                        firetouchinterest(LocalPlayer.Character.HumanoidRootPart, v, 1)
+                    end
+                end
+            end)
+        end
+    end)
+end)
+
+-- 2. Hızlandırıcı Butonu
+CreateButton("Hızı Arttır (35)", function()
+    pcall(function()
+        LocalPlayer.Character.Humanoid.WalkSpeed = 35
+    end)
+end)
+
+-- Menüyü Ekranda Açıp Kapatma Mekaniği (-) tuşu
+local isOpen = true
+CloseBtn.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    Container.Visible = isOpen
+    if isOpen then
+        MainFrame.Size = UDim2.new(0, 320, 0, 380)
+        CloseBtn.Text = "-"
+    else
+        MainFrame.Size = UDim2.new(0, 320, 0, 40)
+        CloseBtn.Text = "+"
+    end
+end)
+
+print("Noolkid Sell Lemons GUI Yüklendi amk!")
